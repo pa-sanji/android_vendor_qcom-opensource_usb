@@ -37,7 +37,17 @@ else
   PRODUCT_PROPERTY_OVERRIDES += vendor.usb.diag.func.name=diag
 endif
 
-ifneq ($(TARGET_KERNEL_VERSION),$(filter $(TARGET_KERNEL_VERSION),4.9 4.14 4.19))
+# 4.19 is deliberately NOT in the legacy list: the msm-4.19 kernel in this
+# tree enables CONFIG_USB_CONFIGFS_F_FS, CONFIG_USB_F_FS and CONFIG_USB_F_MTP,
+# and devices using the AIDL gadget HAL (vendor.usb.use_gadget_hal=1) have no
+# legacy MTP path at all. init.qcom.usb.rc only binds the MTP function here:
+#
+#   on property:sys.usb.config=mtp && property:vendor.usb.use_ffs_mtp=1
+#       symlink /config/usb_gadget/g1/functions/ffs.mtp .../configs/b.1/f1
+#
+# so with use_ffs_mtp=0 'File transfer' only writes idVendor/idProduct and the
+# host never sees an MTP interface.
+ifneq ($(TARGET_KERNEL_VERSION),$(filter $(TARGET_KERNEL_VERSION),4.9 4.14))
   PRODUCT_PROPERTY_OVERRIDES += vendor.usb.use_ffs_mtp=1
   PRODUCT_PROPERTY_OVERRIDES += sys.usb.mtp.batchcancel=1
 else
